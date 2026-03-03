@@ -1,0 +1,65 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.titlebar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #12122a;
+  border-bottom: 1px solid #2a2a4a;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.app-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c8cf8;
+  letter-spacing: 0.05em;
+}
+
+.editor-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.editor-container {
+  flex: 1;
+  overflow: auto;
+  height: 100%;
+}
+
+.editor-container .cm-editor {
+  height: 100%;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.editor-container .cm-scroller {
+  padding: 32px 64px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.editor-container .cm-content {
+  padding: 0;
+}
