@@ -1,11 +1,11 @@
 import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view'
 import { syntaxTree } from '@codemirror/language'
 import { EditorState } from '@codemirror/state'
+import { hasMisspelling } from '../utils/spellCheck'
 
 const CONTEXT_CHARS = 400
-const DEBOUNCE_MS = 150
-
-const WORD_BOUNDARY_RE = /^[\s.,!?;:\)\]"']$/
+const IDLE_MS = 2000
+const MIN_CHARS = 8
 
 function isInCode(state: EditorState, pos: number): boolean {
   let node = syntaxTree(state).resolveInner(pos, 1)
@@ -23,8 +23,8 @@ function isInCode(state: EditorState, pos: number): boolean {
   return false
 }
 
-function isInLatex(docText: string, wordFrom: number): boolean {
-  const before = docText.slice(Math.max(0, wordFrom - 500), wordFrom)
+function isInLatex(docText: string, pos: number): boolean {
+  const before = docText.slice(Math.max(0, pos - 500), pos)
   let depth = 0
   for (const ch of before) {
     if (ch === '$') depth = depth === 0 ? 1 : 0
@@ -32,18 +32,34 @@ function isInLatex(docText: string, wordFrom: number): boolean {
   return depth === 1
 }
 
-function looksLikeCode(word: string): boolean {
-  if (word.length < 2) return true
-  if (/[A-Z]{2,}/.test(word)) return true
-  if (/[a-z][A-Z]/.test(word)) return true
-  if (/[_\-./\\@#<>{}[\]|]/.test(word)) return true
-  if (/^\d/.test(word)) return true
-  return false
+function findSentenceStart(docText: string, end: number): number {
+  const lookback = docText.slice(Math.max(0, end - 600), end)
+  const base = end - lookback.length
+  for (let i = lookback.length - 1; i >= 0; i--) {
+    const ch = lookback[i]
+    if (ch === '\n') {
+      if (i > 0 && lookback[i - 1] === '\n') return base + i + 1
+      if (lookback.length - i > MIN_CHARS) return base + i + 1
+    }
+    if ((ch === '.' || ch === '!' || ch === '?') && i < lookback.length - 1) {
+      const next = lookback[i + 1]
+      if (next === ' ' || next === '\n') return base + i + 2
+    }
+  }
+  return base
+}
+
+function findParagraphStart(docText: string, end: number): number {
+  const lookback = docText.slice(Math.max(0, end - 2000), end)
+  const base = end - lookback.length
+  const idx = lookback.lastIndexOf('\n\n')
+  return idx === -1 ? base : base + idx + 2
 }
 
 export const autocorrect = ViewPlugin.fromClass(
   class {
-    timer: ReturnType<typeof setTimeout> | null = null
+    idleTimer: ReturnType<typeof setTimeout> | null = null
+    lastIdlePos = 0
 
     constructor(_view: EditorView) {}
 
@@ -51,51 +67,124 @@ export const autocorrect = ViewPlugin.fromClass(
       if (!update.docChanged) return
 
       for (const tr of update.transactions) {
-        if (!tr.isUserEvent('input.type')) continue
+        if (!tr.isUserEvent('input')) continue
 
         tr.changes.iterChanges((_fromA, _toA, _fromB, toB, inserted) => {
           const ch = inserted.toString()
-          if (!WORD_BOUNDARY_RE.test(ch)) return
+          const isNewline = ch[0] === '\n'
+          const view = update.view
+          const docText = update.state.doc.toString()
 
-          const doc = update.state.doc
-          const wordEnd = toB - ch.length
+          const insertStart = toB - ch.length
+          const charBeforeInsert = insertStart > 0 ? docText[insertStart - 1] : ''
 
-          let wordStart = wordEnd
-          while (wordStart > 0 && !/\s/.test(doc.sliceString(wordStart - 1, wordStart))) {
-            wordStart--
+          if (isNewline && charBeforeInsert === '\n') {
+            const paraEnd = insertStart - 1
+            const paraStart = findParagraphStart(docText, paraEnd)
+            const text = docText.slice(paraStart, paraEnd)
+            if (text.trim().length >= MIN_CHARS && !isInCode(update.state, paraStart + 1)) {
+              this.cancelIdle()
+              this.lastIdlePos = paraEnd
+              setTimeout(() => this.correct(view, paraStart, paraEnd, text, true), 0)
+              return
+            }
           }
 
-          const word = doc.sliceString(wordStart, wordEnd)
-          if (word.length < 3) return
-          if (looksLikeCode(word)) return
-          if (isInCode(update.state, wordStart + 1)) return
-          if (isInLatex(doc.toString(), wordStart)) return
+          if (
+            (ch === ' ' || isNewline) &&
+            (charBeforeInsert === '.' || charBeforeInsert === '!' || charBeforeInsert === '?')
+          ) {
+            const sentenceEnd = insertStart
+            const sentenceStart = findSentenceStart(docText, sentenceEnd)
+            const text = docText.slice(sentenceStart, sentenceEnd)
+            if (
+              text.trim().length >= MIN_CHARS &&
+              !isInCode(update.state, sentenceStart + 1) &&
+              !isInLatex(docText, sentenceStart) &&
+              hasMisspelling(text)
+            ) {
+              this.cancelIdle()
+              this.lastIdlePos = sentenceEnd
+              setTimeout(() => this.correct(view, sentenceStart, sentenceEnd, text, false), 0)
+              return
+            }
+          }
 
-          if (this.timer) clearTimeout(this.timer)
-          const view = update.view
-          this.timer = setTimeout(() => {
-            this.correct(view, wordStart, wordEnd, word)
-          }, DEBOUNCE_MS)
+          if (isNewline && charBeforeInsert !== '\n') {
+            const line = update.state.doc.lineAt(Math.max(0, insertStart - 1))
+            if (
+              line.text.trim().length >= MIN_CHARS &&
+              !isInCode(update.state, line.from + 1) &&
+              !isInLatex(docText, line.from) &&
+              hasMisspelling(line.text)
+            ) {
+              this.cancelIdle()
+              this.lastIdlePos = line.to
+              setTimeout(() => this.correct(view, line.from, line.to, line.text, false), 0)
+              return
+            }
+          }
+
+          this.resetIdle(view, toB)
         })
       }
     }
 
-    async correct(view: EditorView, from: number, to: number, original: string) {
+    resetIdle(view: EditorView, _cursorPos: number) {
+      this.cancelIdle()
+      this.idleTimer = setTimeout(() => {
+        const state = view.state
+        const doc = state.doc
+        const cursor = state.selection.main.head
+        const docText = doc.toString()
+
+        const sentenceStart = findSentenceStart(docText, cursor)
+        const from = Math.max(sentenceStart, this.lastIdlePos)
+        const text = doc.sliceString(from, cursor)
+        if (
+          text.trim().length < MIN_CHARS ||
+          isInCode(state, from + 1) ||
+          isInLatex(docText, from) ||
+          !hasMisspelling(text)
+        )
+          return
+
+        this.lastIdlePos = cursor
+        this.correct(view, from, cursor, text, false)
+      }, IDLE_MS)
+    }
+
+    cancelIdle() {
+      if (this.idleTimer) {
+        clearTimeout(this.idleTimer)
+        this.idleTimer = null
+      }
+    }
+
+    async correct(
+      view: EditorView,
+      from: number,
+      to: number,
+      original: string,
+      skipSpellGate: boolean
+    ) {
+      if (!skipSpellGate && !hasMisspelling(original)) return
+      if (isInCode(view.state, from + 1)) return
+      if (isInLatex(view.state.doc.toString(), from)) return
+
       const docText = view.state.doc.toString()
-      const contextBefore = docText.slice(Math.max(0, from - CONTEXT_CHARS), from)
-      const contextAfter = docText.slice(to, Math.min(docText.length, to + CONTEXT_CHARS))
+      const context = docText.slice(Math.max(0, from - CONTEXT_CHARS), from)
 
       try {
-        const res = await fetch('http://localhost:3001/api/correct-word', {
+        const res = await fetch('http://localhost:3001/api/correct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ word: original, contextBefore, contextAfter })
+          body: JSON.stringify({ text: original, context })
         })
         if (!res.ok) return
 
         const { corrected } = (await res.json()) as { corrected: string }
         if (!corrected || corrected === original) return
-
         if (view.state.doc.sliceString(from, to) !== original) return
 
         view.dispatch({
@@ -108,7 +197,7 @@ export const autocorrect = ViewPlugin.fromClass(
     }
 
     destroy() {
-      if (this.timer) clearTimeout(this.timer)
+      this.cancelIdle()
     }
   }
 )

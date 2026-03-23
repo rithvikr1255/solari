@@ -1,7 +1,11 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs/promises'
+import { readFileSync } from 'fs'
+import nspell from 'nspell'
+
+let spell: ReturnType<typeof nspell> | null = null
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -40,7 +44,26 @@ ipcMain.handle('open-file', async (_event, filePath: string) => {
   return fs.readFile(filePath, 'utf-8')
 })
 
+// Synchronous IPC so the renderer can use it as a gate without async overhead
+ipcMain.on('spell-check', (event, words: string[]) => {
+  if (!spell) {
+    event.returnValue = words.map(() => true)
+    return
+  }
+  event.returnValue = (words as string[]).map((w) => spell!.correct(w.toLowerCase()))
+})
+
 app.whenReady().then(() => {
+  // Load dictionary in background — returns true for all words until ready
+  const dictDir = resolve(__dirname, '../../node_modules/dictionary-en')
+  try {
+    const aff = readFileSync(join(dictDir, 'index.aff'))
+    const dic = readFileSync(join(dictDir, 'index.dic'))
+    spell = nspell(aff, dic)
+  } catch {
+    // Spell check disabled; autocorrect still fires on paragraph boundaries
+  }
+
   electronApp.setAppUserModelId('com.solari')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
   createWindow()

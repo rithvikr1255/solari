@@ -19,13 +19,16 @@
     "@lezer/highlight": "^1.2.1",
     "@lezer/markdown": "^1.4.1",
     "codemirror": "^6.0.1",
-    "katex": "^0.16.21"
+    "dictionary-en": "^4.0.0",
+    "katex": "^0.16.21",
+    "nspell": "^2.1.5"
   },
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@electron-toolkit/utils": "^4.0.0",
     "@types/katex": "^0.16.7",
+    "@types/nspell": "^2.1.6",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
