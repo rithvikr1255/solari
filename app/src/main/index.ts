@@ -54,14 +54,12 @@ ipcMain.on('spell-check', (event, words: string[]) => {
 })
 
 app.whenReady().then(() => {
-  // Load dictionary in background — returns true for all words until ready
   const dictDir = resolve(__dirname, '../../node_modules/dictionary-en')
   try {
     const aff = readFileSync(join(dictDir, 'index.aff'))
     const dic = readFileSync(join(dictDir, 'index.dic'))
     spell = nspell(aff, dic)
   } catch {
-    // Spell check disabled; autocorrect still fires on paragraph boundaries
   }
 
   electronApp.setAppUserModelId('com.solari')

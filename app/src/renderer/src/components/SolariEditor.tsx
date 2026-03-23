@@ -8,6 +8,7 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { markdownDecorations, markdownTheme } from '../extensions/markdownDecorations'
 import { katexDecorations, katexTheme } from '../extensions/katexDecorations'
 import { autocorrect } from '../extensions/autocorrect'
+import { nlMarkdown } from '@renderer/extensions/nlMarkdown'
 
 const initialDoc = `# Welcome to Solari
 
@@ -47,7 +48,8 @@ export default function SolariEditor() {
         katexDecorations,
         katexTheme,
         EditorView.lineWrapping,
-        autocorrect
+        autocorrect,
+        nlMarkdown
       ]
     })
 
