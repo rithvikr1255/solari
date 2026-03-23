@@ -2,6 +2,7 @@ import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view'
 import { syntaxTree } from '@codemirror/language'
 import { EditorState } from '@codemirror/state'
 import { hasMisspelling } from '../utils/spellCheck'
+import { buildCorrectContext } from '../referenceContext'
 
 const CONTEXT_CHARS = 400
 const IDLE_MS = 2000
@@ -173,7 +174,8 @@ export const autocorrect = ViewPlugin.fromClass(
       if (isInLatex(view.state.doc.toString(), from)) return
 
       const docText = view.state.doc.toString()
-      const context = docText.slice(Math.max(0, from - CONTEXT_CHARS), from)
+      const localContext = docText.slice(Math.max(0, from - CONTEXT_CHARS), from)
+      const context = buildCorrectContext(localContext)
 
       try {
         const res = await fetch('http://localhost:3001/api/correct', {
@@ -191,9 +193,7 @@ export const autocorrect = ViewPlugin.fromClass(
           changes: { from, to, insert: corrected },
           userEvent: 'input.autocorrect'
         })
-      } catch {
-        // best-effort, silent
-      }
+      } catch {}
     }
 
     destroy() {

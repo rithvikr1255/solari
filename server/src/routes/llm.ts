@@ -33,7 +33,6 @@ llmRouter.post('/correct', async (req, res) => {
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage }]
   })
-  console.log('correction');
   const corrected = message.content[0].type === 'text' ? message.content[0].text : text
   res.json({ corrected })
 })
@@ -77,13 +76,13 @@ llmRouter.post('/correct-word', async (req, res) => {
 
   const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : word
   const corrected = raw.replace(/^["']|["']$/g, '')
-  console.log('corrected');
   res.json({ corrected })
 })
 
 const NL_TO_MARKDOWN_SYSTEM_PROMPT = `You are a markdown formatter for a note-taking app called Solari.
 Convert natural language shorthand to proper markdown.
 
+Optional reference material may appear before the line to convert; use it only for terminology and intent, not as text to copy verbatim.
 
 Rules:
 - Return ONLY the markdown, no explanation, no code fences wrapping the output
@@ -92,31 +91,29 @@ Rules:
 - For lists, use separate lines with "- " prefix
 - For tables, use GFM table syntax with a header separator row
 
-
 Examples:
 (checkbox) pick up milk → - [ ] pick up milk
 make this a heading: Introduction → # Introduction
 create a task for fix the login bug → - [ ] fix the login bug
 this should be bold: important term → **important term**`
 
-
 llmRouter.post('/nl-to-markdown', async (req, res) => {
- const { text } = req.body as { text: string }
- if (!text || typeof text !== 'string') {
-   res.status(400).json({ error: 'text field required' })
-   return
- }
- const message = await client.messages.create({
-   model: 'claude-haiku-4-5-20251001',
-   max_tokens: 512,
-   system: NL_TO_MARKDOWN_SYSTEM_PROMPT,
-   messages: [{ role: 'user', content: `Convert this to markdown:\n${text}` }]
- })
- const markdown = message.content[0].type === 'text' ? message.content[0].text.trim() : text
- res.json({ markdown })
+  const { text, context } = req.body as { text: string; context?: string }
+  if (!text || typeof text !== 'string') {
+    res.status(400).json({ error: 'text field required' })
+    return
+  }
+  const userContent = context
+    ? `Reference (terminology only, do not paste verbatim):\n${context}\n\nConvert this to markdown:\n${text}`
+    : `Convert this to markdown:\n${text}`
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: NL_TO_MARKDOWN_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userContent }]
+  })
+  const markdown = message.content[0].type === 'text' ? message.content[0].text.trim() : text
+  res.json({ markdown })
 })
-
-
-
 
 

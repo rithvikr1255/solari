@@ -1,5 +1,6 @@
 import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view'
 import { syntaxTree } from '@codemirror/language'
+import { getReferenceText } from '../referenceContext'
 
 
 function isInCode(state: EditorView['state'], pos: number): boolean {
@@ -76,10 +77,11 @@ function tryRegexConvert(text: string): string | null {
 
 async function callLLMAndApply(view: EditorView, lineFrom: number, lineTo: number, text: string) {
  try {
+   const ref = getReferenceText().trim()
    const res = await fetch('http://localhost:3001/api/nl-to-markdown', {
      method: 'POST',
      headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ text })
+     body: JSON.stringify(ref ? { text, context: ref } : { text })
    })
    if (!res.ok) return
    const { markdown } = (await res.json()) as { markdown: string }
@@ -91,9 +93,7 @@ async function callLLMAndApply(view: EditorView, lineFrom: number, lineTo: numbe
      changes: { from: lineFrom, to: lineTo, insert: markdown },
      userEvent: 'input.nlMarkdown'
    })
- } catch {
-   // best-effort, silent
- }
+ } catch {}
 }
 
 
@@ -120,7 +120,6 @@ export const nlMarkdown = ViewPlugin.fromClass(
 
 
          if (text.length === 0) return
-         // Skip lines that already look like markdown
          if (/^[-*#>|~]/.test(text)) return
          if (line.from + 1 <= line.to && isInCode(update.state, line.from + 1)) return
 
