@@ -82,10 +82,242 @@ html, body, #root {
   letter-spacing: 0.05em;
 }
 
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .editor-area {
   flex: 1;
   overflow: hidden;
   display: flex;
+  min-width: 0;
+}
+
+.formula-dock {
+  display: flex;
+  flex-direction: row-reverse;
+  flex-shrink: 0;
+  align-items: stretch;
+  min-height: 0;
+  -webkit-app-region: no-drag;
+}
+
+.side-panel-drawer {
+  overflow: hidden;
+  width: 0;
+  min-width: 0;
+  transition: width 0.2s ease, min-width 0.2s ease;
+  flex-shrink: 0;
+  border-left: 1px solid transparent;
+}
+
+.formula-dock-open .side-panel-drawer {
+  width: min(320px, 38vw);
+  min-width: min(320px, 38vw);
+  border-left-color: #2a2a4a;
+}
+
+.formula-dock-tab {
+  width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 0;
+  border: none;
+  border-left: 1px solid #2a2a4a;
+  background: #12121f;
+  color: #8a92c8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.formula-dock-tab:hover {
+  color: #b8c0f0;
+  background: #16162a;
+}
+
+.formula-dock-tab-active {
+  color: #7c8cf8;
+  background: #16162a;
+}
+
+.formula-dock-tab-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-orientation: mixed;
+}
+
+.formula-dock-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  background: #3a3a7a;
+  color: #e8e8ff;
+  flex-shrink: 0;
+}
+
+.side-panel {
+  width: 100%;
+  height: 100%;
+  min-width: min(320px, 38vw);
+  display: flex;
+  flex-direction: column;
+  background: #12121f;
+  user-select: text;
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  background: #0e0e18;
+  flex-shrink: 0;
+}
+
+.side-panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7c8cf8;
+}
+
+.side-panel-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #8a8aaa;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-panel-close:hover {
+  color: #e0e0e0;
+  background: #2a2a4a;
+}
+
+.side-panel-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 12px 16px;
+}
+
+.side-panel-rescan {
+  margin-bottom: 12px;
+}
+
+.formula-rescan-btn {
+  width: 100%;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.side-panel-empty-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-panel-empty {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7a7a9a;
+  padding: 8px 4px;
+}
+
+.side-panel-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #c9a227;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #4a4020;
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.formula-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formula-item {
+  padding: 10px 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #2a2a4a;
+  background: #16162a;
+}
+
+.formula-item-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c8c8e8;
+  margin-bottom: 6px;
+}
+
+.formula-item-latex {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #a8a8d0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #0f0f1c;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #252540;
+  max-height: 140px;
+  overflow: auto;
+  margin-bottom: 6px;
+}
+
+.formula-item-triggers {
+  font-size: 10px;
+  color: #6a6a8a;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.formula-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.formula-insert-btn {
+  font-size: 11px;
+  padding: 3px 8px;
 }
 
 .editor-container {
@@ -109,4 +341,51 @@ html, body, #root {
 
 .editor-container .cm-content {
   padding: 0;
+}
+
+.equation-prompt {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 12px 16px 20px;
+  background: linear-gradient(transparent, rgba(10, 10, 24, 0.92));
+  pointer-events: none;
+}
+
+.equation-prompt-inner {
+  pointer-events: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #3a3a6a;
+  background: #16162a;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.equation-prompt-label {
+  font-size: 12px;
+  color: #9aa0c8;
+}
+
+.equation-prompt-preview {
+  font-size: 12px;
+  color: #c8c8e8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: #0f0f1c;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #2a2a4a;
+}
+
+.equation-prompt-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }

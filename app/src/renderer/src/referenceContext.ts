@@ -1,9 +1,22 @@
 const MAX_TEXT = 45000
 const COMBINED_MAX = 48000
 
-type State = { text: string; label: string }
+export type EquationEntry = {
+  id: string
+  latex: string
+  label: string
+  triggers: string[]
+  display?: boolean
+}
 
-let state: State = { text: '', label: '' }
+type State = {
+  text: string
+  label: string
+  equations: EquationEntry[]
+  formulaHint: string
+}
+
+let state: State = { text: '', label: '', equations: [], formulaHint: '' }
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -20,17 +33,36 @@ export function getReferenceSnapshot(): State {
 }
 
 export function setReference(text: string, label?: string) {
-  state = { text: text.slice(0, MAX_TEXT), label: label ?? '' }
+  state = {
+    text: text.slice(0, MAX_TEXT),
+    label: label ?? '',
+    equations: [],
+    formulaHint: ''
+  }
+  emit()
+}
+
+export function setEquationCatalog(equations: EquationEntry[]) {
+  state = { ...state, equations }
+  emit()
+}
+
+export function setFormulaHint(hint: string) {
+  state = { ...state, formulaHint: hint }
   emit()
 }
 
 export function clearReference() {
-  state = { text: '', label: '' }
+  state = { text: '', label: '', equations: [], formulaHint: '' }
   emit()
 }
 
 export function getReferenceText() {
   return state.text
+}
+
+export function getEquationCatalog() {
+  return state.equations
 }
 
 export function buildCorrectContext(localBeforeCursor: string) {

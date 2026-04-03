@@ -8,7 +8,9 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { markdownDecorations, markdownTheme } from '../extensions/markdownDecorations'
 import { katexDecorations, katexTheme } from '../extensions/katexDecorations'
 import { autocorrect } from '../extensions/autocorrect'
+import { equationSuggest } from '../extensions/equationSuggest'
 import { nlMarkdown } from '@renderer/extensions/nlMarkdown'
+import { setEditorView } from '../editorBridge'
 
 const initialDoc = `# Welcome to Solari
 
@@ -49,14 +51,19 @@ export default function SolariEditor() {
         katexTheme,
         EditorView.lineWrapping,
         autocorrect,
+        equationSuggest,
         nlMarkdown
       ]
     })
 
     const view = new EditorView({ state, parent: containerRef.current })
     viewRef.current = view
+    setEditorView(view)
 
-    return () => view.destroy()
+    return () => {
+      setEditorView(null)
+      view.destroy()
+    }
   }, [])
 
   return <div ref={containerRef} className="editor-container" />

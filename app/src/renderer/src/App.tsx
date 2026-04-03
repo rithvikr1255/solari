@@ -1,34 +1,45 @@
 import { useRef, useState, useSyncExternalStore } from 'react'
 import SolariEditor from './components/SolariEditor'
-import {
-  clearReference,
-  getReferenceSnapshot,
-  setReference,
-  subscribe
-} from './referenceContext'
+import EquationPrompt from './components/EquationPrompt'
+import FormulasSidebar from './components/FormulasSidebar'
+import { runEquationCatalogScan, SOLARI_API } from './equationCatalogApi'
+import { clearReference, getReferenceSnapshot, setReference, subscribe } from './referenceContext'
 
-const API = 'http://localhost:3001'
+const API = SOLARI_API
 
 export default function App() {
   const fileRef = useRef<HTMLInputElement>(null)
   const refState = useSyncExternalStore(subscribe, getReferenceSnapshot, getReferenceSnapshot)
   const [loading, setLoading] = useState(false)
 
-  async function onPickPdf(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onPickReference(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+    const name = file.name.toLowerCase()
+    const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf'
+    const isPptx =
+      name.endsWith('.pptx') ||
+      file.type ===
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    if (!isPdf && !isPptx) return
     setLoading(true)
     try {
       const buf = await file.arrayBuffer()
-      const res = await fetch(`${API}/api/extract-pdf`, {
+      const url = isPdf ? `${API}/api/extract-pdf` : `${API}/api/extract-pptx`
+      const contentType = isPdf
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/pdf' },
+        headers: { 'Content-Type': contentType },
         body: buf
       })
       if (!res.ok) return
       const data = (await res.json()) as { text: string }
-      if (data.text) setReference(data.text, file.name)
+      if (!data.text) return
+      setReference(data.text, file.name)
+      await runEquationCatalogScan(data.text)
     } finally {
       setLoading(false)
     }
@@ -42,9 +53,9 @@ export default function App() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
             className="titlebar-file-input"
-            onChange={onPickPdf}
+            onChange={onPickReference}
           />
           <button
             type="button"
@@ -52,7 +63,7 @@ export default function App() {
             disabled={loading}
             onClick={() => fileRef.current?.click()}
           >
-            {loading ? '…' : 'Reference PDF'}
+            {loading ? '…' : 'Reference doc'}
           </button>
           {refState.text ? (
             <>
@@ -66,9 +77,13 @@ export default function App() {
           ) : null}
         </div>
       </header>
-      <main className="editor-area">
-        <SolariEditor />
-      </main>
+      <div className="workspace">
+        <main className="editor-area">
+          <SolariEditor />
+        </main>
+        <FormulasSidebar />
+      </div>
+      <EquationPrompt />
     </div>
   )
 }
