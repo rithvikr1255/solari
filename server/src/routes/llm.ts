@@ -259,6 +259,33 @@ llmRouter.post('/equation-catalog', async (req, res) => {
   }
 })
 
+const IMPROVE_LATEX_SYSTEM = `You convert rough ASCII math or informal math notation to clean LaTeX for a note-taking app.
+
+Return ONLY the LaTeX body, no wrapping $ or $$ delimiters, no explanation, no code fences.
+If the input is already valid LaTeX, return it unchanged.
+If the intent is unclear, return the input unchanged.
+
+Use standard LaTeX: \\frac, \\sum, \\int, \\sqrt, \\begin{pmatrix}, \\vec, \\hat, etc.`
+
+llmRouter.post('/improve-latex', async (req, res) => {
+  const { math, context } = req.body as { math: string; context?: string }
+  if (!math || typeof math !== 'string') {
+    res.status(400).json({ error: 'math field required' })
+    return
+  }
+  const userContent = context
+    ? `Domain reference (use for notation style):\n${context}\n\nConvert to clean LaTeX:\n${math}`
+    : `Convert to clean LaTeX:\n${math}`
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 256,
+    system: IMPROVE_LATEX_SYSTEM,
+    messages: [{ role: 'user', content: userContent }]
+  })
+  const improved = message.content[0].type === 'text' ? message.content[0].text.trim() : math
+  res.json({ improved })
+})
+
 const SUGGEST_EQUATION_SYSTEM = `You decide if the student's recent note text clearly refers to one equation from a provided catalog.
 
 Return ONLY JSON: {"match":false} OR {"match":true,"id":"<id from catalog>","inline":true|false}

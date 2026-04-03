@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { insertEquationAtCursor } from '../equationInsert'
 import { acceptEquationSuggestion, dismissEquationSuggestion } from '../extensions/equationSuggest'
+import KatexPreview from './KatexPreview'
 
 type Detail = { id: string; latex: string; label: string; display: boolean }
 
@@ -33,7 +34,10 @@ export default function EquationPrompt() {
     <div className="equation-prompt" role="dialog" aria-label="Equation suggestion">
       <div className="equation-prompt-inner">
         <span className="equation-prompt-label">From slides: {s.label}</span>
-        <code className="equation-prompt-preview">{s.latex.slice(0, 120)}{s.latex.length > 120 ? '…' : ''}</code>
+        <div className="equation-prompt-preview">
+          <KatexPreview latex={s.latex} display={s.display} className="equation-prompt-katex" />
+        </div>
+        <code className="equation-prompt-latex">{s.latex.slice(0, 120)}{s.latex.length > 120 ? '…' : ''}</code>
         <div className="equation-prompt-actions">
           <button type="button" className="titlebar-btn" onClick={insert}>
             Insert {s.display ? 'display' : 'inline'}

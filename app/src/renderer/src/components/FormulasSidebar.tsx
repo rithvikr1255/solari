@@ -7,6 +7,7 @@ import {
   subscribe,
   type EquationEntry
 } from '../referenceContext'
+import KatexPreview from './KatexPreview'
 
 export default function FormulasSidebar() {
   const refState = useSyncExternalStore(subscribe, getReferenceSnapshot, getReferenceSnapshot)
@@ -78,6 +79,9 @@ export default function FormulasSidebar() {
             {equations.map((e: EquationEntry, i: number) => (
               <li key={`${e.id}-${i}`} className="formula-item">
                 <div className="formula-item-label">{e.label}</div>
+                <div className="formula-item-preview">
+                  <KatexPreview latex={e.latex} display={e.display} />
+                </div>
                 <pre className="formula-item-latex">{e.latex}</pre>
                 {e.triggers.length > 0 ? (
                   <div className="formula-item-triggers">

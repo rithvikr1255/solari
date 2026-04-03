@@ -53,7 +53,6 @@ const PATTERNS: Pattern[] = [
        .map((s) => `- ${s.trim()}`)
        .join('\n')
  },
- { re: /^(?:math|eq|latex):\s+(.+)$/i, convert: (m) => `$${m[1]}$` },
  { re: /^note:\s+(.+)$/i, convert: (m) => `> **Note:** ${m[1]}` },
  { re: /^(?:warn|warning):\s+(.+)$/i, convert: (m) => `> **Warning:** ${m[1]}` },
  { re: /^link:\s+(.+)$/i, convert: (m) => `[${m[1]}]()` },
@@ -74,6 +73,28 @@ function tryRegexConvert(text: string): string | null {
  return null
 }
 
+
+const MATH_SHORTHAND_RE = /^(?:math|eq|latex):\s+(.+)$/i
+
+async function callImproveMathAndApply(view: EditorView, lineFrom: number, lineTo: number, rawLine: string, mathBody: string) {
+ const ref = getReferenceText().trim()
+ try {
+   const res = await fetch('http://localhost:3001/api/improve-latex', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify(ref ? { math: mathBody, context: ref.slice(0, 8000) } : { math: mathBody })
+   })
+   if (!res.ok) return
+   const { improved } = (await res.json()) as { improved: string }
+   if (!improved) return
+   const latex = `$${improved}$`
+   if (view.state.doc.sliceString(lineFrom, lineTo) !== rawLine) return
+   view.dispatch({
+     changes: { from: lineFrom, to: lineTo, insert: latex },
+     userEvent: 'input.nlMarkdown'
+   })
+ } catch {}
+}
 
 async function callLLMAndApply(view: EditorView, lineFrom: number, lineTo: number, text: string) {
  try {
@@ -124,6 +145,13 @@ export const nlMarkdown = ViewPlugin.fromClass(
          if (line.from + 1 <= line.to && isInCode(update.state, line.from + 1)) return
 
 
+         const mathMatch = text.match(MATH_SHORTHAND_RE)
+         if (mathMatch) {
+           const mathBody = mathMatch[1]
+           setTimeout(() => callImproveMathAndApply(view, line.from, line.to, line.text, mathBody), 0)
+           return
+         }
+
          const converted = tryRegexConvert(text)
          if (converted !== null) {
            setTimeout(() => {
@@ -145,7 +173,3 @@ export const nlMarkdown = ViewPlugin.fromClass(
    }
  }
 )
-
-
-
-
