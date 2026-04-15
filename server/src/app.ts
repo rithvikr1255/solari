@@ -4,6 +4,7 @@ import cors from 'cors'
 import { llmRouter } from './routes/llm.js'
 import { pdfRouter } from './routes/pdf.js'
 import { pptxRouter } from './routes/pptx.js'
+import { graphRouter } from './routes/graph.js'
 
 const viteOrigins = [5173, 5174, 5175, 5176, 5177, 5178, 5179].map(
   (p) => `http://localhost:${p}`
@@ -16,5 +17,6 @@ export function createApp() {
   app.use('/api', pdfRouter)
   app.use('/api', pptxRouter)
   app.use('/api', llmRouter)
+  app.use('/api', graphRouter)
   return app
 }
