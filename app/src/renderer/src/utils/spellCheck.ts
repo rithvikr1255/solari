@@ -1,13 +1,3 @@
-declare global {
-  interface Window {
-    api: {
-      saveFile(path: string, content: string): Promise<void>
-      openFile(path: string): Promise<string>
-      checkSpelling(words: string[]): boolean[]
-    }
-  }
-}
-
 const CODE_WORD_RE = /[A-Z]{2,}|[a-z][A-Z]|[_\-./\\@#<>{}[\]|]|^\d/
 
 export function hasMisspelling(text: string): boolean {

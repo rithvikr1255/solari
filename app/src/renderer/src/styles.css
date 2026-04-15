@@ -334,6 +334,32 @@ html, body, #root {
   padding: 3px 8px;
 }
 
+.graph-panel-body {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.graph-canvas {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: block;
+}
+
+.graph-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.graph-header-actions .formula-rescan-btn {
+  width: auto;
+  padding: 4px 10px;
+}
+
 .editor-container {
   flex: 1;
   overflow: auto;
@@ -415,4 +441,142 @@ html, body, #root {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.locket-dock {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: stretch;
+  min-height: 0;
+  -webkit-app-region: no-drag;
+}
+
+.locket-drawer {
+  border-left: none;
+  border-right: 1px solid transparent;
+}
+
+.locket-dock-open .locket-drawer {
+  width: min(260px, 32vw);
+  min-width: min(260px, 32vw);
+  border-right-color: #2a2a4a;
+}
+
+.locket-tab {
+  border-left: none;
+  border-right: 1px solid #2a2a4a;
+}
+
+.locket-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.locket-actions .titlebar-btn {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+.locket-folder-path {
+  font-size: 10px;
+  color: #6a6a8a;
+  padding: 0 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locket-file-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.locket-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #c8c8e0;
+  gap: 6px;
+}
+
+.locket-file-item:hover {
+  background: #1e1e3a;
+}
+
+.locket-file-item-active {
+  background: #2a2a4a;
+  color: #e8e8ff;
+}
+
+.locket-file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locket-file-delete {
+  font-size: 14px;
+  color: #6a6a8a;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.locket-file-item:hover .locket-file-delete {
+  opacity: 1;
+}
+
+.locket-file-delete:hover {
+  color: #e06060;
+}
+
+.locket-save-label {
+  font-weight: 400;
+  color: #6abf6a;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.locket-save-error {
+  color: #e06060;
+}
+
+.locket-new-note-form {
+  margin-bottom: 4px;
+}
+
+.locket-search {
+  width: 100%;
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border: 1px solid #2a2a4a;
+  background: #0c0c18;
+  color: #c8c8e0;
+  outline: none;
+}
+
+.locket-search:focus {
+  border-color: #7c8cf8;
+}
+
+.locket-search::placeholder {
+  color: #4a4a6a;
 }

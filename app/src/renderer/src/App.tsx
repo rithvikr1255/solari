@@ -2,6 +2,8 @@ import { useRef, useState, useSyncExternalStore } from 'react'
 import SolariEditor from './components/SolariEditor'
 import EquationPrompt from './components/EquationPrompt'
 import FormulasSidebar from './components/FormulasSidebar'
+import GraphSidebar from './components/GraphSidebar'
+import LocketSidebar from './components/LocketSidebar'
 import { runEquationCatalogScan, SOLARI_API } from './equationCatalogApi'
 import { clearReference, getReferenceSnapshot, setReference, subscribe } from './referenceContext'
 
@@ -78,10 +80,12 @@ export default function App() {
         </div>
       </header>
       <div className="workspace">
+        <LocketSidebar />
         <main className="editor-area">
           <SolariEditor />
         </main>
         <FormulasSidebar />
+        <GraphSidebar />
       </div>
       <EquationPrompt />
     </div>

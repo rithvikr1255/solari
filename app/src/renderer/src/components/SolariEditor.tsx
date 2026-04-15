@@ -12,22 +12,7 @@ import { equationSuggest } from '../extensions/equationSuggest'
 import { nlMarkdown } from '@renderer/extensions/nlMarkdown'
 import { setEditorView } from '../editorBridge'
 
-const initialDoc = `# Welcome to Solari
-
-Start writing your notes here. Markdown is rendered **inline** as you type.
-
-## Features
-
-- **Bold** and *italic* text render live
-- \`- [ ] Task\` becomes a checkbox
-- Math: $E = mc^2$ or display mode:
-
-$$\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
-
----
-
-> Type freely. The AI assistant will clean up your notes in real time.
-`
+const initialDoc = ''
 
 export default function SolariEditor() {
   const containerRef = useRef<HTMLDivElement>(null)
