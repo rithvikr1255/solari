@@ -8,6 +8,19 @@ const CONTEXT_CHARS = 400
 const IDLE_MS = 2000
 const MIN_CHARS = 8
 
+const MATH_FN_RE = /\b(log|ln|sin|cos|tan|sec|csc|cot|exp|lim|max|min|det|ker|dim)\s*[\(\d\w]/i
+const MATH_EXPR_RE = /\b\w+[\^_]\w/
+const GREEK_RE =
+  /\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b/i
+
+function needsFormatting(text: string): boolean {
+  if (hasMisspelling(text)) return true
+  if (MATH_FN_RE.test(text)) return true
+  if (MATH_EXPR_RE.test(text)) return true
+  if (GREEK_RE.test(text)) return true
+  return false
+}
+
 function isInCode(state: EditorState, pos: number): boolean {
   let node = syntaxTree(state).resolveInner(pos, 1)
   while (node) {
@@ -24,13 +37,38 @@ function isInCode(state: EditorState, pos: number): boolean {
   return false
 }
 
-function isInLatex(docText: string, pos: number): boolean {
-  const before = docText.slice(Math.max(0, pos - 500), pos)
-  let depth = 0
-  for (const ch of before) {
-    if (ch === '$') depth = depth === 0 ? 1 : 0
-  }
-  return depth === 1
+// Lezer only creates FencedCode nodes for closed fences — unclosed blocks aren't in the tree.
+function isAfterOpenFence(docText: string, pos: number): boolean {
+  const upTo = docText.slice(0, pos)
+  const backtick = (upTo.match(/^```/gm) ?? []).length
+  const tilde = (upTo.match(/^~~~/gm) ?? []).length
+  return backtick % 2 !== 0 || tilde % 2 !== 0
+}
+
+const CODE_KEYWORD_RE =
+  /^\s*(int|float|double|char|bool|void|return|if|else|for|while|do|switch|case|break|continue|class|struct|enum|namespace|template|include|define|import|from|def|fn|let|const|var|function|async|await|public|private|protected|static|new|delete|null|nullptr|true|false|this|self)\b/m
+const CODE_PUNCT_RE = /[;{}](\s|$)/m
+
+function looksLikeCode(text: string): boolean {
+  if (text.includes('```') || text.includes('~~~')) return true
+  if (CODE_KEYWORD_RE.test(text)) return true
+  if (CODE_PUNCT_RE.test(text)) return true
+  return false
+}
+
+function shouldSkip(
+  text: string,
+  state: EditorState,
+  from: number,
+  to: number,
+  docText: string
+): boolean {
+  if (isInCode(state, from + 1)) return true
+  if (to > from + 1 && isInCode(state, to - 1)) return true
+  if (isAfterOpenFence(docText, from)) return true
+  if (isAfterOpenFence(docText, to)) return true
+  if (looksLikeCode(text)) return true
+  return false
 }
 
 function findSentenceStart(docText: string, end: number): number {
@@ -83,7 +121,10 @@ export const autocorrect = ViewPlugin.fromClass(
             const paraEnd = insertStart - 1
             const paraStart = findParagraphStart(docText, paraEnd)
             const text = docText.slice(paraStart, paraEnd)
-            if (text.trim().length >= MIN_CHARS && !isInCode(update.state, paraStart + 1)) {
+            if (
+              text.trim().length >= MIN_CHARS &&
+              !shouldSkip(text, update.state, paraStart, paraEnd, docText)
+            ) {
               this.cancelIdle()
               this.lastIdlePos = paraEnd
               setTimeout(() => this.correct(view, paraStart, paraEnd, text, true), 0)
@@ -100,9 +141,8 @@ export const autocorrect = ViewPlugin.fromClass(
             const text = docText.slice(sentenceStart, sentenceEnd)
             if (
               text.trim().length >= MIN_CHARS &&
-              !isInCode(update.state, sentenceStart + 1) &&
-              !isInLatex(docText, sentenceStart) &&
-              hasMisspelling(text)
+              !shouldSkip(text, update.state, sentenceStart, sentenceEnd, docText) &&
+              needsFormatting(text)
             ) {
               this.cancelIdle()
               this.lastIdlePos = sentenceEnd
@@ -115,9 +155,8 @@ export const autocorrect = ViewPlugin.fromClass(
             const line = update.state.doc.lineAt(Math.max(0, insertStart - 1))
             if (
               line.text.trim().length >= MIN_CHARS &&
-              !isInCode(update.state, line.from + 1) &&
-              !isInLatex(docText, line.from) &&
-              hasMisspelling(line.text)
+              !shouldSkip(line.text, update.state, line.from, line.to, docText) &&
+              needsFormatting(line.text)
             ) {
               this.cancelIdle()
               this.lastIdlePos = line.to
@@ -144,9 +183,8 @@ export const autocorrect = ViewPlugin.fromClass(
         const text = doc.sliceString(from, cursor)
         if (
           text.trim().length < MIN_CHARS ||
-          isInCode(state, from + 1) ||
-          isInLatex(docText, from) ||
-          !hasMisspelling(text)
+          shouldSkip(text, state, from, cursor, docText) ||
+          !needsFormatting(text)
         )
           return
 
@@ -169,9 +207,8 @@ export const autocorrect = ViewPlugin.fromClass(
       original: string,
       skipSpellGate: boolean
     ) {
-      if (!skipSpellGate && !hasMisspelling(original)) return
-      if (isInCode(view.state, from + 1)) return
-      if (isInLatex(view.state.doc.toString(), from)) return
+      if (!skipSpellGate && !needsFormatting(original)) return
+      if (shouldSkip(original, view.state, from, to, view.state.doc.toString())) return
 
       const docText = view.state.doc.toString()
       const localContext = docText.slice(Math.max(0, from - CONTEXT_CHARS), from)

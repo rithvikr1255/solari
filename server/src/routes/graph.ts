@@ -1,5 +1,9 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import { readFileSync, writeFileSync, renameSync, mkdirSync } from 'fs'
+import { existsSync } from 'fs'
+import path from 'path'
+import os from 'os'
 
 export const graphRouter = Router()
 
@@ -18,8 +22,43 @@ interface Edge {
   strength: 'strong' | 'weak'
 }
 
-const notes = new Map<string, NoteRecord>()
-let edges: Edge[] = []
+const GRAPH_PATH = path.join(os.homedir(), 'Documents', 'Solari Locket', 'graph.json')
+
+function loadGraph(): { notes: Map<string, NoteRecord>; edges: Edge[] } {
+  if (!existsSync(GRAPH_PATH)) return { notes: new Map(), edges: [] }
+  try {
+    const raw = readFileSync(GRAPH_PATH, 'utf-8')
+    const parsed = JSON.parse(raw)
+    if (parsed.version !== 1) return { notes: new Map(), edges: [] }
+    const map = new Map<string, NoteRecord>()
+    if (Array.isArray(parsed.nodes)) {
+      for (const n of parsed.nodes) {
+        if (n && typeof n.id === 'string') map.set(n.id, n as NoteRecord)
+      }
+    }
+    const edges: Edge[] = Array.isArray(parsed.edges) ? parsed.edges : []
+    return { notes: map, edges }
+  } catch {
+    return { notes: new Map(), edges: [] }
+  }
+}
+
+function saveGraph() {
+  const dir = path.dirname(GRAPH_PATH)
+  mkdirSync(dir, { recursive: true })
+  const data = JSON.stringify({ version: 1, nodes: [...notes.values()], edges })
+  const tmp = GRAPH_PATH + '.tmp'
+  writeFileSync(tmp, data, 'utf-8')
+  try {
+    renameSync(tmp, GRAPH_PATH)
+  } catch {
+    writeFileSync(GRAPH_PATH, data, 'utf-8')
+  }
+}
+
+const { notes: loadedNotes, edges: loadedEdges } = loadGraph()
+const notes = loadedNotes
+let edges: Edge[] = loadedEdges
 
 const GRAPH_SYSTEM = `You are a knowledge graph assistant for a markdown note-taking app.
 Given a set of notes, find meaningful conceptual connections between them.
@@ -114,6 +153,7 @@ graphRouter.post('/graph/note', async (req, res) => {
   }
 
   const noteEdges = edges.filter((e) => e.from === id || e.to === id)
+  saveGraph()
   res.json({ edges: noteEdges })
 })
 
@@ -125,6 +165,7 @@ graphRouter.delete('/graph/note/:id', (req, res) => {
   }
   notes.delete(id)
   edges = edges.filter((e) => e.from !== id && e.to !== id)
+  saveGraph()
   res.json({ ok: true })
 })
 

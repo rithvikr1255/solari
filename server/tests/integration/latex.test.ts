@@ -139,7 +139,7 @@ describe('POST /api/suggest-equation', () => {
       expect(body.id).toBe('kinetic-energy')
       expect(typeof body.latex).toBe('string')
     }
-    // match may be false if model is not confident — that is acceptable behaviour
+    // match may be false if model is not confident, that is fine
     expect(typeof body.match).toBe('boolean')
   })
 

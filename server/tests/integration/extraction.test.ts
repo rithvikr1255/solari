@@ -32,8 +32,7 @@ describe('POST /api/extract-pdf', () => {
       contentType: 'application/pdf',
       rawBody: pdfBuf,
     })
-    // pdf-parse behaviour: 200 with text OR 400 if the minimal PDF lacks enough structure.
-    // Either response is acceptable — the important thing is that the server does not crash.
+    // either is fine, just can't crash
     expect([200, 400]).toContain(res.status)
     if (res.status === 200) {
       const { text } = (await res.json()) as { text: string }

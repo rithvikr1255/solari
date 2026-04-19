@@ -102,6 +102,10 @@ export default function GraphSidebar() {
   const rafRef = useRef(0)
 
   useEffect(() => {
+    fetchGraph().catch(() => {})
+  }, [])
+
+  useEffect(() => {
     posRef.current = initPositions(nodes, posRef.current)
     tickCountRef.current = 0
     cancelAnimationFrame(rafRef.current)
