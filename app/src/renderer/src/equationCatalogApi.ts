@@ -26,7 +26,7 @@ export async function runEquationCatalogScan(referenceText: string): Promise<voi
       )
     } else if (list.length === 0) {
       setFormulaHint(
-        'No formulas were extracted. Many PDFs store math as images (invisible to text extraction). Try exported lecture notes, PPTX, or a text-based PDF.'
+        'No formulas were found. The document may contain no mathematical content, or the text could not be read (scanned image PDF).'
       )
     } else {
       setFormulaHint('')

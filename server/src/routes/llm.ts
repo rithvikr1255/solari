@@ -31,7 +31,7 @@ MARKDOWN FORMATTING:
 
 PRESERVE UNCHANGED:
 - Existing LaTeX delimiters and content
-- Code blocks (fenced or inline)
+- Code blocks (fenced or inline). NEVER add \`\`\` or ~~~ fence markers that are not already in the input.
 - Existing markdown syntax (**bold**, *italic*, [links], etc.)
 - Paragraph structure and blank lines
 
@@ -145,7 +145,19 @@ llmRouter.post('/nl-to-markdown', async (req, res) => {
   res.json({ markdown })
 })
 
-const EQUATION_CATALOG_SYSTEM = `You extract mathematical equations and formulas from lecture or textbook text for a note app.
+const EQUATION_CATALOG_SYSTEM = `You are a math formula extractor and inferrer for a student note-taking app.
+
+Given lecture or textbook text, produce a catalog of relevant mathematical equations in two passes:
+
+PASS 1 — Extract: Find any explicit math notation (LaTeX, Unicode symbols, ASCII math like x^2, integrals, summations, etc.) and convert each to clean LaTeX.
+
+PASS 2 — Infer: For any topic, theorem, concept, or named result mentioned in the text that has a well-known formula (even if the formula itself isn't written out), include that formula. For example:
+- "Newton's second law" → F = ma
+- "quadratic formula" or "quadratic equation" → x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
+- "Euler's formula" → e^{i\\theta} = \\cos\\theta + i\\sin\\theta
+- "Bayes' theorem" → P(A|B) = \\frac{P(B|A)P(A)}{P(B)}
+- "chain rule" → \\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)
+Use your knowledge to supply the correct standard formula.
 
 Return ONLY valid JSON (no markdown code fences, no text before or after). Use ONE of these shapes:
 1) A JSON array: [ {...}, {...} ]
@@ -154,11 +166,11 @@ Return ONLY valid JSON (no markdown code fences, no text before or after). Use O
 Each item must include:
 - id: string (short slug, e.g. "wave-equation")
 - latex: string (math body only, no wrapping $ or $$; amsmath ok)
-- label: string (human-readable)
-- triggers: string array (phrases/symbols for matching; use [] if none)
-- display: boolean (true for display-style math)
+- label: string (human-readable name)
+- triggers: string array (key words/phrases that would prompt inserting this formula; use [] if none)
+- display: boolean (true for display-style block math, false for inline)
 
-If there are no equations, return [] or {"equations":[]}.
+If there is truly no mathematical content and no named theorems or formulas, return [].
 Max 24 items.`
 
 function stripJsonFence(s: string): string {

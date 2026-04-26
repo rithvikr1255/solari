@@ -109,11 +109,23 @@ async function callLLMAndApply(view: EditorView, lineFrom: number, lineTo: numbe
    if (!markdown || markdown === text) return
    if (view.state.doc.sliceString(lineFrom, lineTo) !== text) return
 
-
-   view.dispatch({
-     changes: { from: lineFrom, to: lineTo, insert: markdown },
-     userEvent: 'input.nlMarkdown'
-   })
+   // If the LLM returned a complete fenced code block, insert a blank line before the
+   // closing fence and place the cursor there so the user can keep typing inside.
+   const fenceClose = /\n(?:```|~~~)[^\S\n]*$/.exec(markdown)
+   if (fenceClose) {
+     const before = markdown.slice(0, fenceClose.index + 1)
+     const after = markdown.slice(fenceClose.index + 1)
+     view.dispatch({
+       changes: { from: lineFrom, to: lineTo, insert: before + '\n' + after },
+       selection: { anchor: lineFrom + fenceClose.index + 1 },
+       userEvent: 'input.nlMarkdown'
+     })
+   } else {
+     view.dispatch({
+       changes: { from: lineFrom, to: lineTo, insert: markdown },
+       userEvent: 'input.nlMarkdown'
+     })
+   }
  } catch {}
 }
 
@@ -143,6 +155,7 @@ export const nlMarkdown = ViewPlugin.fromClass(
          if (text.length === 0) return
          if (/^[-*#>|~]/.test(text)) return
          if (line.from + 1 <= line.to && isInCode(update.state, line.from + 1)) return
+        if (/^[`~]{3}/.test(text)) return
 
 
          const mathMatch = text.match(MATH_SHORTHAND_RE)

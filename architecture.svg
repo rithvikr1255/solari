@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 570"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+
+  <defs>
+    <!-- arrowheads, one per flow colour -->
+    <marker id="ah-ext" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#3a5c9a"/>
+    </marker>
+    <marker id="ah-llm" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#3a6050"/>
+    </marker>
+    <marker id="ah-gph" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#6a3a3a"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="960" height="570" fill="#0c0c0c"/>
+
+  <!-- ╔══════════════════════════════╗ -->
+  <!-- ║         FRONTEND             ║ -->
+  <!-- ╚══════════════════════════════╝ -->
+  <rect x="20" y="20" width="420" height="520" rx="12"
+        fill="#111111" stroke="#1e1e1e" stroke-width="1.5"/>
+  <text x="230" y="43" text-anchor="middle"
+        fill="#333" font-size="10" letter-spacing="3" font-weight="600">FRONTEND</text>
+
+  <!-- Electron shell bar -->
+  <rect x="36" y="52" width="388" height="30" rx="5"
+        fill="#181818" stroke="#252525" stroke-width="1"/>
+  <text x="230" y="72" text-anchor="middle"
+        fill="#454545" font-size="10">Electron  ·  IPC  ·  local file system</text>
+
+  <!-- EDITOR -->
+  <text x="44" y="100" fill="#2e2e2e" font-size="9" letter-spacing="2">EDITOR</text>
+  <rect x="36" y="108" width="388" height="104" rx="8"
+        fill="#13203a" stroke="#1e3668" stroke-width="1.2"/>
+  <text x="230" y="130" text-anchor="middle"
+        fill="#5a7ec8" font-size="14" font-weight="700">SolariEditor</text>
+  <text x="230" y="148" text-anchor="middle"
+        fill="#3a548a" font-size="10">CodeMirror 6</text>
+  <text x="230" y="168" text-anchor="middle"
+        fill="#2c4270" font-size="9">autocorrect  ·  nlMarkdown  ·  equationSuggest</text>
+  <text x="230" y="184" text-anchor="middle"
+        fill="#2c4270" font-size="9">katexDecorations  ·  markdownDecorations</text>
+
+  <!-- STATE -->
+  <text x="44" y="232" fill="#2e2e2e" font-size="9" letter-spacing="2">STATE</text>
+
+  <rect x="36"  y="240" width="91" height="48" rx="5" fill="#111c14" stroke="#1e3224" stroke-width="1"/>
+  <text x="81"  y="258" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">reference</text>
+  <text x="81"  y="272" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">Context</text>
+  <text x="81"  y="283" text-anchor="middle" fill="#2c5040" font-size="8">text · equations</text>
+
+  <rect x="135" y="240" width="91" height="48" rx="5" fill="#111c14" stroke="#1e3224" stroke-width="1"/>
+  <text x="180" y="258" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">editor</text>
+  <text x="180" y="272" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">Bridge</text>
+  <text x="180" y="283" text-anchor="middle" fill="#2c5040" font-size="8">view ref</text>
+
+  <rect x="234" y="240" width="91" height="48" rx="5" fill="#111c14" stroke="#1e3224" stroke-width="1"/>
+  <text x="279" y="258" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">locket</text>
+  <text x="279" y="272" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">Context</text>
+  <text x="279" y="283" text-anchor="middle" fill="#2c5040" font-size="8">files · active</text>
+
+  <rect x="333" y="240" width="91" height="48" rx="5" fill="#111c14" stroke="#1e3224" stroke-width="1"/>
+  <text x="378" y="258" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">graph</text>
+  <text x="378" y="272" text-anchor="middle" fill="#4a8060" font-size="9" font-weight="600">Context</text>
+  <text x="378" y="283" text-anchor="middle" fill="#2c5040" font-size="8">nodes · edges</text>
+
+  <!-- PANELS -->
+  <text x="44" y="308" fill="#2e2e2e" font-size="9" letter-spacing="2">PANELS</text>
+
+  <rect x="36"  y="316" width="91" height="48" rx="5" fill="#1a1124" stroke="#2e2042" stroke-width="1"/>
+  <text x="81"  y="334" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Formulas</text>
+  <text x="81"  y="348" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Sidebar</text>
+
+  <rect x="135" y="316" width="91" height="48" rx="5" fill="#1a1124" stroke="#2e2042" stroke-width="1"/>
+  <text x="180" y="334" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Equation</text>
+  <text x="180" y="348" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Prompt</text>
+
+  <rect x="234" y="316" width="91" height="48" rx="5" fill="#1a1124" stroke="#2e2042" stroke-width="1"/>
+  <text x="279" y="334" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Locket</text>
+  <text x="279" y="348" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Sidebar</text>
+
+  <rect x="333" y="316" width="91" height="48" rx="5" fill="#1a1124" stroke="#2e2042" stroke-width="1"/>
+  <text x="378" y="334" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Graph</text>
+  <text x="378" y="348" text-anchor="middle" fill="#8050b0" font-size="9" font-weight="600">Sidebar</text>
+
+  <!-- footer notes -->
+  <rect x="36" y="388" width="388" height="22" rx="4" fill="#161616" stroke="#1e1e1e" stroke-width="1"/>
+  <text x="230" y="403" text-anchor="middle" fill="#383838" font-size="9">
+    KaTeX decorations — rendered locally, no API call
+  </text>
+
+  <rect x="36" y="418" width="388" height="22" rx="4" fill="#161616" stroke="#1e1e1e" stroke-width="1"/>
+  <text x="230" y="433" text-anchor="middle" fill="#383838" font-size="9">
+    PDF · PPTX → raw bytes via fetch → /api/extract-*
+  </text>
+
+
+  <!-- ╔══════════════════════════════╗ -->
+  <!-- ║          BACKEND             ║ -->
+  <!-- ╚══════════════════════════════╝ -->
+  <rect x="620" y="20" width="320" height="520" rx="12"
+        fill="#111111" stroke="#1e1e1e" stroke-width="1.5"/>
+  <text x="780" y="43" text-anchor="middle"
+        fill="#333" font-size="10" letter-spacing="2" font-weight="600">BACKEND  ·  :3001</text>
+
+  <!-- pdfRouter -->
+  <rect x="636" y="52" width="288" height="56" rx="6"
+        fill="#111828" stroke="#1a2c52" stroke-width="1.2"/>
+  <text x="780" y="73" text-anchor="middle" fill="#4a6ab0" font-size="11" font-weight="700">pdfRouter</text>
+  <text x="780" y="89" text-anchor="middle" fill="#2e4272" font-size="9">/api/extract-pdf  ·  pdf-parse  →  { text }</text>
+
+  <!-- pptxRouter -->
+  <rect x="636" y="120" width="288" height="56" rx="6"
+        fill="#111828" stroke="#1a2c52" stroke-width="1.2"/>
+  <text x="780" y="141" text-anchor="middle" fill="#4a6ab0" font-size="11" font-weight="700">pptxRouter</text>
+  <text x="780" y="157" text-anchor="middle" fill="#2e4272" font-size="9">/api/extract-pptx  ·  JSZip slide XML  →  { text }</text>
+
+  <!-- llmRouter -->
+  <rect x="636" y="188" width="288" height="180" rx="6"
+        fill="#112018" stroke="#1a3a26" stroke-width="1.2"/>
+  <text x="780" y="209" text-anchor="middle" fill="#408060" font-size="11" font-weight="700">llmRouter</text>
+  <text x="651" y="227" fill="#2a5040" font-size="9">/api/correct</text>
+  <text x="651" y="243" fill="#2a5040" font-size="9">/api/correct-word</text>
+  <text x="651" y="259" fill="#2a5040" font-size="9">/api/nl-to-markdown</text>
+  <text x="651" y="275" fill="#2a5040" font-size="9">/api/equation-catalog</text>
+  <text x="651" y="291" fill="#2a5040" font-size="9">/api/suggest-equation</text>
+  <text x="651" y="307" fill="#2a5040" font-size="9">/api/improve-latex</text>
+  <line x1="648" y1="320" x2="908" y2="320" stroke="#1a3a26" stroke-width="1"/>
+  <text x="780" y="338" text-anchor="middle" fill="#1e3a28" font-size="9">all calls → Anthropic API</text>
+  <text x="780" y="354" text-anchor="middle" fill="#1e3a28" font-size="9">claude-haiku-4-5-20251001</text>
+
+  <!-- graphRouter -->
+  <rect x="636" y="380" width="288" height="60" rx="6"
+        fill="#201414" stroke="#3c2020" stroke-width="1.2"/>
+  <text x="780" y="401" text-anchor="middle" fill="#a05050" font-size="11" font-weight="700">graphRouter</text>
+  <text x="780" y="418" text-anchor="middle" fill="#6a3030" font-size="9">/api/graph/upsert  ·  edges  ·  delete</text>
+  <text x="780" y="432" text-anchor="middle" fill="#503030" font-size="9">persisted to disk as JSON</text>
+
+  <!-- Anthropic API -->
+  <rect x="636" y="452" width="288" height="58" rx="6"
+        fill="#1e1810" stroke="#3c2c1a" stroke-width="1.2"/>
+  <text x="780" y="473" text-anchor="middle" fill="#b08840" font-size="11" font-weight="700">Anthropic API</text>
+  <text x="780" y="491" text-anchor="middle" fill="#7a6030" font-size="9">claude-haiku-4-5-20251001</text>
+
+
+  <!-- ╔══════════════════════════════╗ -->
+  <!-- ║      FLOW ARROWS             ║ -->
+  <!-- ╚══════════════════════════════╝ -->
+
+  <!-- ARROW 1 — extract text (blue)
+       Trunk: (442,80) → (543,80)
+       Branch A: (543,80) → (618,80)  hits pdfRouter centre
+       Branch B: (543,80) → (543,148) → (618,148)  hits pptxRouter centre
+  -->
+  <line x1="442" y1="80" x2="618" y2="80"
+        stroke="#3a5c9a" stroke-width="1.4" marker-end="url(#ah-ext)"/>
+  <line x1="543" y1="80" x2="543" y2="148"
+        stroke="#3a5c9a" stroke-width="1.4"/>
+  <line x1="543" y1="148" x2="618" y2="148"
+        stroke="#3a5c9a" stroke-width="1.4" marker-end="url(#ah-ext)"/>
+  <!-- junction dot -->
+  <circle cx="543" cy="80" r="3" fill="#3a5c9a"/>
+  <!-- label -->
+  <rect x="448" y="59" width="76" height="16" rx="3" fill="#0c0c0c"/>
+  <text x="486" y="71" text-anchor="middle" fill="#4a6aaa" font-size="9" font-weight="600">extract text</text>
+
+  <!-- ARROW 2 — LLM requests (green)
+       (442,160) → (555,160) → (555,278) → (618,278)  hits llmRouter centre
+  -->
+  <polyline points="442,160 555,160 555,278 618,278"
+            fill="none" stroke="#3a6050" stroke-width="1.4" marker-end="url(#ah-llm)"/>
+  <!-- label -->
+  <rect x="446" y="148" width="86" height="16" rx="3" fill="#0c0c0c"/>
+  <text x="489" y="160" text-anchor="middle" fill="#4a7060" font-size="9" font-weight="600">LLM requests</text>
+
+  <!-- ARROW 3 — graph sync (red)
+       (442,340) → (555,340) → (555,410) → (618,410)  hits graphRouter centre
+  -->
+  <polyline points="442,340 555,340 555,410 618,410"
+            fill="none" stroke="#6a3a3a" stroke-width="1.4" marker-end="url(#ah-gph)"/>
+  <!-- label -->
+  <rect x="449" y="328" width="68" height="16" rx="3" fill="#0c0c0c"/>
+  <text x="483" y="340" text-anchor="middle" fill="#7a4a4a" font-size="9" font-weight="600">graph sync</text>
+
+</svg>

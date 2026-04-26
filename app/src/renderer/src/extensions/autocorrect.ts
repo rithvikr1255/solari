@@ -226,6 +226,10 @@ export const autocorrect = ViewPlugin.fromClass(
         if (!corrected || corrected === original) return
         if (view.state.doc.sliceString(from, to) !== original) return
 
+        const countFences = (s: string) =>
+          (s.match(/^```/gm) ?? []).length + (s.match(/^~~~/gm) ?? []).length
+        if (countFences(corrected) > countFences(original)) return
+
         view.dispatch({
           changes: { from, to, insert: corrected },
           userEvent: 'input.autocorrect'
