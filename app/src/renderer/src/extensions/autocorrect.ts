@@ -226,6 +226,12 @@ export const autocorrect = ViewPlugin.fromClass(
         if (!corrected || corrected === original) return
         if (view.state.doc.sliceString(from, to) !== original) return
 
+
+        if (corrected.length > original.length * 2 + 150) return
+        const origNewlines = (original.match(/\n/g) ?? []).length
+        const corrNewlines = (corrected.match(/\n/g) ?? []).length
+        if (corrNewlines > origNewlines + 1) return
+
         const countFences = (s: string) =>
           (s.match(/^```/gm) ?? []).length + (s.match(/^~~~/gm) ?? []).length
         if (countFences(corrected) > countFences(original)) return

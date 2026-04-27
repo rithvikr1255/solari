@@ -1,5 +1,8 @@
 const MAX_TEXT = 45000
 const COMBINED_MAX = 48000
+// How much ref text to include in correction context — enough for domain vocabulary,
+// not so much that the model conflates reference content with what it should return.
+const REF_CONTEXT_LIMIT = 3500
 
 export type EquationEntry = {
   id: string
@@ -68,7 +71,8 @@ export function getEquationCatalog() {
 export function buildCorrectContext(localBeforeCursor: string) {
   const ref = state.text.trim()
   if (!ref) return localBeforeCursor
-  let combined = `${ref}\n\n---\n${localBeforeCursor}`
+  const refSnippet = ref.slice(0, REF_CONTEXT_LIMIT)
+  let combined = `${refSnippet}\n\n---\n${localBeforeCursor}`
   if (combined.length > COMBINED_MAX) combined = combined.slice(-COMBINED_MAX)
   return combined
 }

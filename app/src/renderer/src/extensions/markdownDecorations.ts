@@ -122,10 +122,10 @@ function buildDecorations(view: EditorView): DecorationSet {
         const hashMatch = lineText.match(/^#{1,6} /)
         if (!hashMatch) return
         const hashEnd = from + hashMatch[0].length
+        pending.push({ from, to: from, deco: Decoration.line({ class: `cm-heading cm-h${level}` }) })
         if (!cursorOverlaps(from, to, view)) {
           pending.push({ from, to: hashEnd, deco: Decoration.replace({}) })
         }
-        pending.push({ from, to, deco: Decoration.line({ class: `cm-heading cm-h${level}` }) })
         return false
       }
 
@@ -236,7 +236,8 @@ function buildDecorations(view: EditorView): DecorationSet {
         const markerText = doc.sliceString(from, to)
         if (markerText === '-' || markerText === '*' || markerText === '+') {
           const line = doc.lineAt(from)
-          if (!cursorOverlaps(line.from, line.to, view)) {
+          const isTaskList = /^\s*[-*+] \[[ xX]\] /.test(line.text)
+          if (!isTaskList && !cursorOverlaps(line.from, line.to, view)) {
             pending.push({ from, to, deco: Decoration.replace({ widget: new BulletWidget() }) })
           }
         }
@@ -252,12 +253,10 @@ function buildDecorations(view: EditorView): DecorationSet {
     const checked = line.text.match(/^(\s*[-*+] )\[x\] /i)
     const match = unchecked ?? checked
     if (match && !cursorOverlaps(line.from, line.to, view)) {
-      const prefixLen = match[1].length
-      const boxStart = line.from + prefixLen
-      const boxEnd = boxStart + 4
+      // Replace the full "- [ ] " / "- [x] " prefix (including list marker) with the widget.
       pending.push({
-        from: boxStart,
-        to: boxEnd,
+        from: line.from,
+        to: line.from + match[0].length,
         deco: Decoration.replace({ widget: new CheckboxWidget(!!checked) })
       })
     }

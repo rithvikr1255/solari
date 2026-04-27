@@ -111,11 +111,14 @@ llmRouter.post('/correct-word', async (req, res) => {
 const NL_TO_MARKDOWN_SYSTEM_PROMPT = `You are a markdown formatter for a note-taking app called Solari.
 Convert natural language shorthand to proper markdown.
 
-Optional reference material may appear before the line to convert; use it only for terminology and intent, not as text to copy verbatim.
+You may be given surrounding lines (the lines written just before the current line) to help understand context and intent.
 
 Rules:
-- Return ONLY the markdown, no explanation, no code fences wrapping the output
+- Return ONLY the formatted line, no explanation, no code fences wrapping the output
 - Preserve content exactly; only change formatting/structure
+- Use surrounding lines to infer list type, heading level, or formatting pattern in use
+- If the surrounding lines are checkboxes (- [ ]) and the current line looks like a list item, return it as a checkbox
+- If the surrounding lines are bullets (- ) and the current line looks like a list item, return it as a bullet
 - If you cannot determine intent, return the input unchanged
 - For lists, use separate lines with "- " prefix
 - For tables, use GFM table syntax with a header separator row
@@ -124,17 +127,30 @@ Examples:
 (checkbox) pick up milk → - [ ] pick up milk
 make this a heading: Introduction → # Introduction
 create a task for fix the login bug → - [ ] fix the login bug
-this should be bold: important term → **important term**`
+this should be bold: important term → **important term**
+
+Context-aware examples (surrounding lines shown before →):
+Surrounding: "- [ ] buy milk"
+Current: "call dentist" → - [ ] call dentist
+
+Surrounding: "- item one"
+Current: "item two" → - item two`
 
 llmRouter.post('/nl-to-markdown', async (req, res) => {
-  const { text, context } = req.body as { text: string; context?: string }
+  const { text, context, surroundingLines } = req.body as {
+    text: string
+    context?: string
+    surroundingLines?: string
+  }
   if (!text || typeof text !== 'string') {
     res.status(400).json({ error: 'text field required' })
     return
   }
-  const userContent = context
-    ? `Reference (terminology only, do not paste verbatim):\n${context}\n\nConvert this to markdown:\n${text}`
-    : `Convert this to markdown:\n${text}`
+  const parts: string[] = []
+  if (context) parts.push(`Reference (terminology only, do not paste verbatim):\n${context}`)
+  if (surroundingLines) parts.push(`Surrounding lines (for context):\n${surroundingLines}`)
+  parts.push(`Convert this to markdown:\n${text}`)
+  const userContent = parts.join('\n\n')
   const message = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
@@ -297,6 +313,75 @@ llmRouter.post('/equation-catalog', async (req, res) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'catalog failed'
     res.status(500).json({ error: msg, equations: [] })
+  }
+})
+
+const CLASSIFY_LINES_SYSTEM = `You are a line classifier for a markdown note-taking app.
+
+You receive a JSON object with:
+- "lines": the plain-text lines to classify
+- "preceding" (optional): lines already in the document above these lines — use this to understand hierarchy and context
+
+Classify each line as exactly one of:
+- "checkbox"     — top-level action item / task / todo (buy X, call Y, fix Z, deploy, review)
+- "sub-checkbox" — a sub-task nested under a parent task or checklist item
+- "bullet"       — top-level informational point: fact, concept, named topic, definition
+- "sub-bullet"   — a detail, example, or sub-point that elaborates on the preceding item
+- "heading"      — a section title or major topic label; short, no trailing punctuation
+- "none"         — prose sentence, question, math expression, code, or doesn't fit a list
+
+Return ONLY a JSON array of strings, one per input line, same order. No explanation, no fences.
+
+Examples:
+["buy milk","call dentist","fix login bug"] → ["checkbox","checkbox","checkbox"]
+["Newton's first law","conservation of momentum","kinetic energy"] → ["bullet","bullet","bullet"]
+["Introduction","Methods","Results"] → ["heading","heading","heading"]
+["The experiment showed results.","We need more data."] → ["none","none"]
+
+Preceding: "- [ ] Deploy backend"
+Lines: ["update env vars","run migrations","restart service"] → ["sub-checkbox","sub-checkbox","sub-checkbox"]
+
+Preceding: "- OS Protection Rings"
+Lines: ["Ring 0: kernel mode","Ring 3: user mode"] → ["sub-bullet","sub-bullet"]
+
+Preceding: "- Machine Learning"
+Lines: ["supervised learning","uses labeled data"] → ["sub-bullet","sub-bullet"]`
+
+llmRouter.post('/classify-lines', async (req, res) => {
+  const { lines, preceding } = req.body as { lines?: unknown; preceding?: string }
+  if (!Array.isArray(lines) || lines.length === 0) {
+    res.status(400).json({ error: 'lines array required' })
+    return
+  }
+  const cleaned = (lines as unknown[])
+    .filter((l): l is string => typeof l === 'string' && l.trim().length > 0)
+    .slice(0, 20)
+  if (cleaned.length === 0) {
+    res.status(400).json({ error: 'no valid lines' })
+    return
+  }
+  const userContent = preceding?.trim()
+    ? `Preceding context:\n${preceding.trim()}\n\nClassify these lines:\n${JSON.stringify(cleaned)}`
+    : JSON.stringify(cleaned)
+  try {
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      system: CLASSIFY_LINES_SYSTEM,
+      messages: [{ role: 'user', content: userContent }]
+    })
+    const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : '[]'
+    let parsed: unknown[] = []
+    try { parsed = JSON.parse(stripJsonFence(raw)) } catch { /* fall through */ }
+    const valid = new Set(['checkbox', 'sub-checkbox', 'bullet', 'sub-bullet', 'heading', 'none'])
+    const types = cleaned.map((_, i) => {
+      const t = Array.isArray(parsed) ? parsed[i] : undefined
+      return (typeof t === 'string' && valid.has(t)) ? t : 'none'
+    })
+    res.json({ types })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'classify failed'
+    res.status(500).json({ error: msg, types: cleaned.map(() => 'none') })
   }
 })
 
